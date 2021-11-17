@@ -1,4 +1,5 @@
 // Scrape custom queries
+// Adapted from: https://github.com/percona/mysqld_exporter/blob/v0.10.1/collector/custom_query.go
 
 package collector
 

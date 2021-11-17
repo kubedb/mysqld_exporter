@@ -1,3 +1,5 @@
+# Adapted from: https://github.com/percona/mysqld_exporter/blob/v0.10.1/queries-mysqld-group-replication.yml
+
 #mysql_perf_schema_replication_group:
 #  query: "/*!80000 SELECT CHANNEL_NAME as channel_name, MEMBER_ID as member_id, MEMBER_HOST as member_host, MEMBER_PORT as member_port, MEMBER_STATE as member_state, MEMBER_ROLE as member_role, MEMBER_VERSION as member_version, CASE WHEN MEMBER_STATE = 'ONLINE' THEN 1 WHEN MEMBER_STATE = 'RECOVERING' THEN 2 WHEN MEMBER_STATE = 'OFFLINE' THEN 3 WHEN MEMBER_STATE = 'ERROR' THEN 4 WHEN MEMBER_STATE = 'UNREACHABLE' THEN 5 END as member_info FROM performance_schema.replication_group_members WHERE MEMBER_ID=@@server_uuid */"
 #  metrics:
