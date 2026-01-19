@@ -22,9 +22,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"log/slog"
 	"math"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -106,7 +106,7 @@ func (scq ScrapeCustomQuery) Scrape(ctx context.Context, instance *instance, ch 
 		customQueryMap:  make(map[string]string),
 	}
 	path := "custom-queries.yaml"
-	userQueriesData, err := ioutil.ReadFile(path)
+	userQueriesData, err := os.ReadFile(path)
 	if err != nil {
 		return fmt.Errorf("failed to open custom queries:%s", err.Error())
 	}
