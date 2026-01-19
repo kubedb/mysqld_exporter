@@ -3,18 +3,18 @@ module github.com/prometheus/mysqld_exporter
 go 1.24.0
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.2
-	github.com/alecthomas/kingpin/v2 v2.4.0
-	github.com/blang/semver/v4 v4.0.0
-	github.com/go-sql-driver/mysql v1.9.3
-	github.com/google/go-cmp v0.7.0
-	github.com/google/uuid v1.6.0
-	github.com/prometheus/client_golang v1.23.2
-	github.com/prometheus/client_model v0.6.2
-	github.com/prometheus/common v0.66.1
-	github.com/prometheus/exporter-toolkit v0.14.1
-	github.com/smartystreets/goconvey v1.8.1
-	gopkg.in/ini.v1 v1.67.0
+	github.com/DATA-DOG/go-sqlmock v1.5.0
+	github.com/go-kit/log v0.2.0
+	github.com/go-sql-driver/mysql v1.6.0
+	github.com/prometheus/client_golang v1.11.0
+	github.com/prometheus/client_model v0.2.0
+	github.com/prometheus/common v0.32.1
+	github.com/prometheus/exporter-toolkit v0.7.0
+	github.com/satori/go.uuid v1.2.0
+	github.com/smartystreets/goconvey v1.7.2
+	gopkg.in/alecthomas/kingpin.v2 v2.2.6
+	gopkg.in/ini.v1 v1.63.2
+	gopkg.in/yaml.v2 v2.4.0
 )
 
 require (
