@@ -29,15 +29,22 @@ jobs:
           make promu
           make check_license style staticcheck unused build test-short
 
+
+      - name: Log in to the GitHub Container registry
+        uses: docker/login-action@v2
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Build
         env:
-          DOCKER_REPO: kubedb
-          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          USERNAME: 1gtm
+          DOCKER_REPO: ghcr.io/kubedb
+          DOCKER_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          USERNAME: ${{ github.actor }}
         run: |
           export PATH=$(go env GOPATH)/bin:$PATH
           export DOCKER_IMAGE_TAG=${GITHUB_REF#"refs/tags/"}
-          docker login --username ${USERNAME} --password ${DOCKER_TOKEN}
           promu crossbuild
           make docker
           make docker-publish
