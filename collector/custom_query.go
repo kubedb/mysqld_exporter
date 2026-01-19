@@ -387,7 +387,11 @@ func queryNamespaceMapping(ctx context.Context, ch chan<- prometheus.Metric,
 	if err != nil {
 		return nil, fmt.Errorf("error running query on database: %s, %s", namespace, err)
 	}
-	defer rows.Close()
+	defer func() {
+		if cerr := rows.Close(); cerr != nil {
+			logger.Warn("error closing rows", "err", cerr)
+		}
+	}()
 	columnNames, err := rows.Columns()
 	if err != nil {
 		return nil, fmt.Errorf("error retrieving column list for:  %s, %s", namespace, err)
@@ -475,7 +479,7 @@ func queryNamespaceMappings(ctx context.Context, ch chan<- prometheus.Metric,
 		// Non-serious errors - likely version or parsing problems.
 		if len(nonFatalErrors) > 0 {
 			for _, err := range nonFatalErrors {
-				logger.Info("error", err.Error())
+				logger.Info(err.Error())
 			}
 		}
 	}
