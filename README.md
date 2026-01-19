@@ -9,7 +9,7 @@ Prometheus exporter for MySQL server metrics.
 
 Supported versions:
 * MySQL >= 5.6.
-* MariaDB >= 10.2
+* MariaDB >= 10.3
 
 NOTE: Not all collection methods are supported on MySQL/MariaDB < 5.6
 
@@ -26,19 +26,56 @@ NOTE: It is recommended to set a max connection limit for the user to avoid over
 
 ### Build
 
-    make
+    make build
 
 ### Running
 
-Running using an environment variable:
+#####  Single exporter mode
 
-    export DATA_SOURCE_NAME='user:password@(hostname:3306)/'
-    ./mysqld_exporter <flags>
-
-Running using ~/.my.cnf:
+Running using `.my.cnf` from the current directory:
 
     ./mysqld_exporter <flags>
 
+#####  Multi-target support
+
+This exporter supports the multi-target pattern. This allows running a single instance of this exporter for multiple MySQL targets.
+
+To use the multi-target functionality, send an http request to the endpoint `/probe?target=foo:3306` where target is set to the DSN of the MySQL instance to scrape metrics from.
+
+To avoid putting sensitive information like username and password in the URL, you can have multiple configurations in `config.my-cnf` file and match it by adding `&auth_module=<section>` to the request.
+ 
+Sample config file for multiple configurations
+
+        [client]
+        user = foo
+        password = foo123
+        [client.servers]
+        user = bar
+        password = bar123
+
+On the prometheus side you can set a scrape config as follows
+
+        - job_name: mysql # To get metrics about the mysql exporter’s targets
+          metrics_path: /probe
+          params:
+            # Not required. Will match value to child in config file. Default value is `client`.
+            auth_module: [client.servers]
+          static_configs:
+            - targets:
+              # All mysql hostnames or unix sockets to monitor.
+              - server1:3306
+              - server2:3306
+              - unix:///run/mysqld/mysqld.sock
+          relabel_configs:
+            - source_labels: [__address__]
+              target_label: __param_target
+            - source_labels: [__param_target]
+              target_label: instance
+            - target_label: __address__
+              # The mysqld_exporter host:port
+              replacement: localhost:9104
+
+#####  Flag format
 Example format for flags for version > 0.10.0:
 
     --collect.auto_increment.columns
@@ -59,6 +96,10 @@ collect.engine_innodb_status                                 | 5.1           | C
 collect.engine_tokudb_status                                 | 5.6           | Collect from SHOW ENGINE TOKUDB STATUS.
 collect.global_status                                        | 5.1           | Collect from SHOW GLOBAL STATUS (Enabled by default)
 collect.global_variables                                     | 5.1           | Collect from SHOW GLOBAL VARIABLES (Enabled by default)
+collect.heartbeat                                            | 5.1           | Collect from [heartbeat](#heartbeat).
+collect.heartbeat.database                                   | 5.1           | Database from where to collect heartbeat data. (default: heartbeat)
+collect.heartbeat.table                                      | 5.1           | Table from where to collect heartbeat data. (default: heartbeat)
+collect.heartbeat.utc                                        | 5.1           | Use UTC for timestamps of the current server (`pt-heartbeat` is called with `--utc`). (default: false)
 collect.info_schema.clientstats                              | 5.5           | If running with userstat=1, set to true to collect client statistics.
 collect.info_schema.innodb_metrics                           | 5.6           | Collect metrics from information_schema.innodb_metrics.
 collect.info_schema.innodb_tablespaces                       | 5.7           | Collect metrics from information_schema.innodb_sys_tablespaces.
@@ -68,6 +109,7 @@ collect.info_schema.processlist                              | 5.1           | C
 collect.info_schema.processlist.min_time                     | 5.1           | Minimum time a thread must be in each state to be counted. (default: 0)
 collect.info_schema.query_response_time                      | 5.5           | Collect query response time distribution if query_response_time_stats is ON.
 collect.info_schema.replica_host                             | 5.6           | Collect metrics from information_schema.replica_host_status.
+collect.info_schema.rocksdb_perf_context                     | 5.6           | Collect RocksDB metrics from information_schema.ROCKSDB_PERF_CONTEXT.
 collect.info_schema.tables                                   | 5.1           | Collect metrics from information_schema.tables.
 collect.info_schema.tables.databases                         | 5.1           | The list of databases to collect table stats for, or '`*`' for all.
 collect.info_schema.tablestats                               | 5.1           | If running with userstat=1, set to true to collect table statistics.
@@ -93,23 +135,33 @@ collect.perf_schema.replication_group_member_stats           | 5.7           | C
 collect.perf_schema.replication_applier_status_by_worker     | 5.7           | Collect metrics from performance_schema.replication_applier_status_by_worker.
 collect.slave_status                                         | 5.1           | Collect from SHOW SLAVE STATUS (Enabled by default)
 collect.slave_hosts                                          | 5.1           | Collect from SHOW SLAVE HOSTS
-collect.heartbeat                                            | 5.1           | Collect from [heartbeat](#heartbeat).
-collect.heartbeat.database                                   | 5.1           | Database from where to collect heartbeat data. (default: heartbeat)
-collect.heartbeat.table                                      | 5.1           | Table from where to collect heartbeat data. (default: heartbeat)
-collect.heartbeat.utc                                        | 5.1           | Use UTC for timestamps of the current server (`pt-heartbeat` is called with `--utc`). (default: false)
+collect.sys.user_summary                                     | 5.7           | Collect metrics from sys.x$user_summary (disabled by default).
 
 
 ### General Flags
 Name                                       | Description
 -------------------------------------------|--------------------------------------------------------------------------------------------------
+mysqld.address                             | Hostname and port used for connecting to MySQL server, format: `host:port`. (default: `localhost:3306`)
+mysqld.username                            | Username to be used for connecting to MySQL Server
 config.my-cnf                              | Path to .my.cnf file to read MySQL credentials from. (default: `~/.my.cnf`)
 log.level                                  | Logging verbosity (default: info)
 exporter.lock_wait_timeout                 | Set a lock_wait_timeout (in seconds) on the connection to avoid long metadata locking. (default: 2)
+exporter.enable_lock_wait_timeout          | Enable the lock_wait_timeout connection parameter. Makes the exporter compatible with older versions of MySQL. (default: true)
 exporter.log_slow_filter                   | Add a log_slow_filter to avoid slow query logging of scrapes.  NOTE: Not supported by Oracle MySQL.
+tls.insecure-skip-verify                   | Ignore tls verification errors.
 web.config.file                            | Path to a [web configuration file](#tls-and-basic-authentication)
 web.listen-address                         | Address to listen on for web interface and telemetry.
 web.telemetry-path                         | Path under which to expose metrics.
 version                                    | Print the version information.
+
+### Environment Variables
+Name                                       | Description
+-------------------------------------------|--------------------------------------------------------------------------------------------------
+MYSQLD_EXPORTER_PASSWORD                   | Password to be used for connecting to MySQL Server
+
+### Configuration precedence
+
+If you have configured cli with both `mysqld` flags and a valid configuration file, the options in the configuration file will override the flags for `client` section.
 
 ## TLS and basic authentication
 
@@ -118,12 +170,6 @@ The MySQLd Exporter supports TLS and basic authentication.
 To use TLS and/or basic authentication, you need to pass a configuration file
 using the `--web.config.file` parameter. The format of the file is described
 [in the exporter-toolkit repository](https://github.com/prometheus/exporter-toolkit/blob/master/docs/web-configuration.md).
-
-### Setting the MySQL server's data source name
-
-The MySQL server's [data source name](http://en.wikipedia.org/wiki/Data_source_name)
-must be set via the `DATA_SOURCE_NAME` environment variable.
-The format of this variable is described at https://github.com/go-sql-driver/mysql#dsn-data-source-name.
 
 ## Customizing Configuration for a SSL Connection
 
@@ -140,12 +186,10 @@ ssl-key=/path/to/ssl/client/key
 ssl-cert=/path/to/ssl/client/cert
 ```
 
-Customizing the SSL configuration is only supported in the mysql cnf file and is not supported if you set the mysql server's data source name in the environment variable DATA_SOURCE_NAME.
-
 
 ## Using Docker
 
-You can deploy this exporter using the [prom/mysqld-exporter](https://registry.hub.docker.com/r/prom/mysqld-exporter/) Docker image.
+You can deploy this exporter using the [prom/mysqld-exporter](https://hub.docker.com/r/prom/mysqld-exporter/) Docker image.
 
 For example:
 
@@ -155,8 +199,8 @@ docker pull prom/mysqld-exporter
 
 docker run -d \
   -p 9104:9104 \
+  -v /home/user/user_my.cnf:/.my.cnf \
   --network my-mysql-network  \
-  -e DATA_SOURCE_NAME="user:password@(hostname:3306)/" \
   prom/mysqld-exporter
 ```
 

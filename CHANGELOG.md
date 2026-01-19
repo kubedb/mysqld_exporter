@@ -9,6 +9,113 @@ Changes:
 * [ENHANCEMENT]
 * [BUGFIX]
 
+## 0.18.0 / 2025-09-25
+
+Changes:
+
+* [FEATURE] Add RocksDB context metrics #931
+* [FEATURE] Add command line option to explicitly disable `lock_wait_timeout` #896
+* [FEATURE] Add support for MariaDB GTID in slave status #958
+* [ENHANCEMENT] Review regex declarations in innodb and global variables collectors #941
+* [ENHANCEMENT] Mixin: Use `std.parseYaml` instead of Tanka native function #935
+* [ENHANCEMENT] Move exporter flags to main package #967
+* [BUGFIX] Fixed the issue of authentication failure when the password contains the `#` symbol #937
+
+## 0.17.2 / 2025-02-25
+
+Changes:
+
+* [BUGFIX] Fix query on events_statements_summary_by_digest for mariadb #922
+
+## 0.17.1 / 2025-02-21
+
+Changes:
+
+* [BUGFIX] Fix query on perf_schema.events_statements_summary_by_digest #920
+
+## 0.17.0 / 2025-02-19
+
+Changes:
+* [FEATURE] Add perf_schema quantile columns to collector #897
+* [BUGFIX] Update Mixin dashboard to "editable: false" #911
+* [BUGFIX] Fix typo for "locahost" #914
+* [BUGFIX] Fix database quoting problem in collector 'info_schema.tables' #908
+* [BUGFIX] Use SUM_LOCK_TIME and SUM_CPU_TIME with mysql >= 8.0.28 #916
+* [BUGFIX] Add missing metrics_path to multi-target example #899
+
+## 0.16.0 / 2024-11-08
+
+Changes:
+
+* [CHANGE] Replace logging library go-kit/log with slog #875
+* [FEATURE] Support for prometheus scrape timeout in probe endpoint #828
+* [ENHANCEMENT] Support MySQL 8.4 replicas syntax #837
+* [ENHANCEMENT] Fetch lock time and cpu time from performance schema #862
+* [ENHANCEMENT] Add the instance struct to handle connections #859
+* [ENHANCEMENT] Optimize code by using built-in constants in the standard lib #844
+* [BUGFIX] Fix fetching tmpTables vs tmpDiskTables from performance_schema #853
+* [BUGFIX] Skip SPACE_TYPE column for MariaDB >=10.5 #860
+* [BUGFIX] Fixed parsing of timestamps with non-zero padded days #841
+* [BUGFIX] Fix auto_increment metric collection errors caused by using collation in INFORMATION_SCHEMA searches #833
+* [BUGFIX] Fix race condition in ReloadConfig #760
+* [BUGFIX] Change processlist query to support ONLY_FULL_GROUP_BY sql_mode #684
+* [BUGFIX] replication_applier_status_by_worker requires mysql 8.0 #683
+* [BUGFIX] Update docker registry link in README.md #813
+* [BUGFIX] Fix Docker run command and update documentation for cnf file handling #843
+* [BUGFIX] info_schema_tables: do not collect the sys schema #879
+
+## 0.15.1 / 2023-12-12
+
+* Rebuild for dependency updates
+
+## 0.15.0 / 2023-06-16
+
+BREAKING CHANGES:
+
+The exporter no longer supports the monolithic `DATA_SOURCE_NAME` environment variable.
+To configure connections to MySQL you can either use a `my.cnf` style config file or command line arguments.
+
+For example:
+
+    export MYSQLD_EXPORTER_PASSWORD=secret
+    mysqld_exporter --mysqld.address=localhost:3306 --mysqld.username=exporter
+
+We have also dropped some internal scrape metrics:
+- `mysql_exporter_scrapes_total`
+- `mysql_exporter_scrape_errors_total`
+- `mysql_last_scrape_failed`
+
+The default client configuration file is now `.my.cnf` in the process working directory. Use `--config.my-cnf="$HOME/.my.cnf"` to retain the previous default.
+
+Changes:
+
+* [CHANGE] Allow `tlsCfg.InsecureSkipVerify` outside of mTLS #631
+* [CHANGE] Update to exporter-toolkit v0.8.1 #677
+* [CHANGE] Fix shared metrics between requests #722
+* [CHANGE] Allow empty passwords #742
+* [CHANGE] Don't use HOME env in the my-cnf config path. #745
+* [FEATURE] Add support for collecting metrics from `sys.user_summary` #628
+* [FEATURE] Support for multi-target mysqld probes #651
+* [FEATURE] Add MySQL TLS configurations #718
+* [FEATURE] Add config reload via /-/reload #734
+* [ENHANCEMENT] Add UNIX domain socket support for multi-target scraping #707
+* [ENHANCEMENT] Use `STRAIGHT_JOIN` in infoSchemaAutoIncrementQuery #726
+* [BUGFIX] Fix `infoSchemaInnodbMetricsEnabledColumnQuery` #687
+* [BUGFIX] Allow empty passwords #742
+
+## 0.14.0 / 2022-01-05
+
+BREAKING CHANGES:
+
+Metric names in the info_schema.processlist collector have been changed. #603
+Metric names in the info_schema.replica_host collector have been changed. #496
+
+* [CHANGE] Rewrite processlist collector #603
+* [FEATURE] Add collector for `replica_host_status` #496
+* [ENHANCEMENT] Expose dates as timestamps grom GLOBAL STATUS #561
+* [BUGFIX] Fix mysql_slave_hosts_info for mysql 5.5 and mariadb 10.5 #577
+* [BUGFIX] Fix logging issues #562 #602
+
 ## 0.13.0 / 2021-05-18
 
 BREAKING CHANGES:
